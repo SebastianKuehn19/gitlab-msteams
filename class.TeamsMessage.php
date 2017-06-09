@@ -99,14 +99,67 @@ class TeamsMessage {
         $this->sections[] = $section;
     }
 
-    public function addAction($text, $url)
+    public function addCommentAction($text, $placeholder, $target, $button = 'OK', $multiline = true)
     {
-        $this->potentialAction[] = [
-            '@context' => 'http://schema.org',
-            '@type' => 'ViewAction',
-            'name' => $text,
-            'target' => [$url]
+        $this->addPotentialAction(
+            $text,
+            null,
+            'ActionCard',
+            [
+                $this->makeInput($placeholder, 'comment', $multiline)
+            ],
+            [
+                $this->makeAction($button, $target)
+            ]);
+    }
+
+    public function addPotentialAction($text, $target, $type = null, $inputs = [], $actions = [])
+    {
+        $action = $this->makeAction($text, $target, $type);
+
+        $action['@context'] = 'http://schema.org';
+
+        if (!empty($inputs)) {
+            $action['inputs'] = $inputs;
+        }
+
+        if (!empty($actions)) {
+            $action['actions'] = $actions;
+        }
+
+        $this->potentialAction[] = $action;
+    }
+
+    public function makeAction($text, $target, $type = null)
+    {
+        $type = $type ? $type : 'ViewAction';
+
+        $action = [
+            '@type' => $type,
+            'name' => $text
         ];
+
+        if (is_array($target)) {
+            $action['targets'] = $target;
+        } else if ($target) {
+            $action['target'] = $target;
+        }
+
+        return $action;
+    }
+
+    public function makeInput($text, $id, $isMultiline = true, $type = null)
+    {
+        $type = $type ? $type : 'TextInput';
+
+        $input = [
+            '@type' => $type,
+            'id' => $id,
+            'title' => $text,
+            'isMultiline' => $isMultiline
+        ];
+
+        return $input;
     }
 
     public function send($url) {

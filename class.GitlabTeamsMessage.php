@@ -10,12 +10,12 @@ class GitlabTeamsMessage extends TeamsMessage {
     public function __construct($json, $debug = false) {
         $this->gitlab_json = $json;
         $this->debug = $debug;
-        
+
         $this->input = json_decode($json,true);
         if(!isset($this->input) && !isset($this->input['object_kind'])) {
             throw new ErrorException("Can't parse gitlab json input");
         }
-        
+
         switch($this->input['object_kind']) {
             case 'note':
                 $this->parseNote();
@@ -46,7 +46,7 @@ class GitlabTeamsMessage extends TeamsMessage {
                 break;
         }
     }
-    
+
     function parseUnknownInput() {
         $this->setTitle("Unknown Message: ".$this->input['project']['name']);
         $this->setText("Kind: ".$this->input['object_kind']);
@@ -58,8 +58,9 @@ class GitlabTeamsMessage extends TeamsMessage {
         $this->addActivity($this->input['object_attributes']['note'],
             $this->input['user']['name'],
             $this->input['user']['avatar_url']);
-        
-        $this->addAction('View',$this->input['object_attributes']['url']);
+
+        $this->addCommentAction('Reply', 'Enter your comment', 'http://...');//@todo
+        $this->addPotentialAction('View',$this->input['object_attributes']['url']);
     }
 
     function parseIssue() {
@@ -67,8 +68,8 @@ class GitlabTeamsMessage extends TeamsMessage {
         $this->addActivity($this->input['object_attributes']['note'],
             $this->input['user']['name'].": ".$this->input['object_attributes']['title'],
             $this->input['user']['avatar_url']);
-        
-        $this->addAction('View',$this->input['object_attributes']['url']);
+
+        $this->addPotentialAction('View',$this->input['object_attributes']['url']);
     }
 
     function parseMergeRequest() {
@@ -77,7 +78,7 @@ class GitlabTeamsMessage extends TeamsMessage {
             $this->input['user']['name'].": ".$this->input['object_attributes']['title'],
             $this->input['user']['avatar_url']);
         
-        $this->addAction('View',$this->input['object_attributes']['url']);
+        $this->addPotentialAction('View',$this->input['object_attributes']['url']);
     }
 
     function parsePush() {
@@ -93,6 +94,9 @@ class GitlabTeamsMessage extends TeamsMessage {
         }
 
         $this->addFacts("", $commits);
+
+        $this->addCommentAction('Reply', 'Enter your comment', 'http://...');//@todo
+        $this->addPotentialAction('View',$this->input['object_attributes']['url']);
     }
 
     function parseTagPush() {
@@ -108,7 +112,7 @@ class GitlabTeamsMessage extends TeamsMessage {
             $this->input['user']['name'].": ",
             $this->input['user']['avatar_url']);
 
-        $this->addAction('View Commit',$this->input['commit']['url']);
+        $this->addPotentialAction('View Commit',$this->input['commit']['url']);
     }
 
     function parseBuild() {
@@ -117,7 +121,7 @@ class GitlabTeamsMessage extends TeamsMessage {
             $this->input['user']['name'].": ".$this->input['build_name'],
             $this->input['user']['avatar_url']);
 
-        $this->addAction('View Repository',$this->input['repository']['git_http_url']);
+        $this->addPotentialAction('View Repository',$this->input['repository']['git_http_url']);
     }
 
     function parseWikiPage() {
@@ -126,6 +130,6 @@ class GitlabTeamsMessage extends TeamsMessage {
             $this->input['user']['name'].": ",
             $this->input['user']['avatar_url']);
 
-        $this->addAction('View WikiPage',$this->input['object_attributes']['url']);
+        $this->addPotentialAction('View WikiPage',$this->input['object_attributes']['url']);
     }
 }
