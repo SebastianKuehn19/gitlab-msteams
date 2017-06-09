@@ -99,65 +99,117 @@ class TeamsMessage {
         $this->sections[] = $section;
     }
 
-    public function addCommentAction($text, $placeholder, $target, $button = 'OK', $multiline = true)
+    public function addCommentAction($text, $placeholder, $button, $target, $id, $body)
     {
         $this->addPotentialAction(
-            $text,
-            null,
-            'ActionCard',
             [
-                $this->makeInput($placeholder, 'comment', $multiline)
+                'text' => $text,
+                'inputs' => [
+                    $this->makeInput(['id' => $id, 'title' => $placeholder], 'TextInput')
+                ],
+                'actions' => [
+                    $this->makeAction(['text' => $button, 'target' => $target, 'body' => $body], 'HttpPost')
+                ]
             ],
-            [
-                $this->makeAction($button, $target)
-            ]);
+            'Actioncard');
     }
 
-    public function addPotentialAction($text, $target, $type = null, $inputs = [], $actions = [])
+    public function addPotentialAction($options, $type = null)
     {
-        $action = $this->makeAction($text, $target, $type);
-
-        $action['@context'] = 'http://schema.org';
-
-        if (!empty($inputs)) {
-            $action['inputs'] = $inputs;
-        }
-
-        if (!empty($actions)) {
-            $action['actions'] = $actions;
-        }
-
-        $this->potentialAction[] = $action;
+        $this->potentialAction[] = $this->makeAction($options, $type);
     }
 
-    public function makeAction($text, $target, $type = null)
+    public function makeAction($options, $type = null)
     {
         $type = $type ? $type : 'ViewAction';
 
-        $action = [
-            '@type' => $type,
-            'name' => $text
-        ];
-
-        if (is_array($target)) {
-            $action['targets'] = $target;
-        } else if ($target) {
-            $action['target'] = $target;
+        switch($type) {
+            case 'ViewAction':
+                $action = [
+                    'name' => $options['text'],
+                    'target' => $options['target']
+                ];
+                break;
+            case 'OpenUri':
+                $action = [
+                    'name' => $options['text'],
+                    'targets' => $options['targets']
+                ];
+                break;
+            case 'HttpPost':
+                $action = [
+                    'name' => $options['text'],
+                    'target' => $options['target']
+                ];
+                if (isset($options['headers'])) {
+                    $action['headers'] = $options['headers'];
+                }
+                if (isset($options['body'])) {
+                    $action['body'] = $options['body'];
+                }
+                if (isset($options['bodyContentType'])) {
+                    $action['bodyContentType'] = $options['bodyContentType'];
+                }
+                break;
+            case 'ActionCard':
+                $action = [
+                    'name' => $options['text'],
+                    'inputs' => $options['inputs'],
+                    'actions' => $options['actions']
+                ];
+                break;
+            default:
+                return [];
         }
+
+        $action['@type'] = $type;
 
         return $action;
     }
 
-    public function makeInput($text, $id, $isMultiline = true, $type = null)
+    public function makeInput($options, $type = null)
     {
         $type = $type ? $type : 'TextInput';
 
         $input = [
             '@type' => $type,
-            'id' => $id,
-            'title' => $text,
-            'isMultiline' => $isMultiline
+            'title' => $options['text'],
+            'id' => $options['id'],
         ];
+
+        if (isset($options['isRequired'])) {
+            $input['isRequired'] = $options['isRequired'];
+        }
+        if (isset($options['value'])) {
+            $input['value'] = $options['value'];
+        }
+
+        switch($type) {
+            case 'TextInput':
+                if (isset($options['isMultiline'])) {
+                    $input['isMultiline'] = $options['isMultiline'];
+                }
+                if (isset($options['maxLength'])) {
+                    $input['maxLength'] = $options['maxLength'];
+                }
+                break;
+            case 'DateInput':
+                if (isset($options['includeTime'])) {
+                    $input['includeTime'] = $options['includeTime'];
+                }
+                break;
+            case 'MultichoiceInput':
+                $input['choices'] = $options['choices'];
+                if (isset($options['isMultiSelect'])) {
+                    $input['isMultiSelect'] = $options['isMultiSelect'];
+                }
+                if (isset($options['style'])) {
+                    $input['style'] = $options['style'];
+                }
+                break;
+            default:
+                return [];
+        }
 
         return $input;
     }
