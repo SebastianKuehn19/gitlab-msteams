@@ -59,8 +59,8 @@ class GitlabTeamsMessage extends TeamsMessage {
             $this->input['user']['name'],
             $this->input['user']['avatar_url']);
 
-        $this->addCommentAction('Reply', 'Enter your comment', 'OK', 'http://...', 'comment', 'body={{comment.value}}');//@todo
-        $this->addPotentialAction(['text' => 'View', 'target' => $this->input['object_attributes']['url']]);
+        $this->addCommentAction();
+        $this->addViewButton();
     }
 
     function parseIssue() {
@@ -69,7 +69,7 @@ class GitlabTeamsMessage extends TeamsMessage {
             $this->input['user']['name'].": ".$this->input['object_attributes']['title'],
             $this->input['user']['avatar_url']);
 
-        $this->addPotentialAction(['text' => 'View', 'target' => $this->input['object_attributes']['url']]);
+        $this->addViewButton();
     }
 
     function parseMergeRequest() {
@@ -78,7 +78,7 @@ class GitlabTeamsMessage extends TeamsMessage {
             $this->input['user']['name'].": ".$this->input['object_attributes']['title'],
             $this->input['user']['avatar_url']);
 
-        $this->addPotentialAction(['text' => 'View', 'target' => $this->input['object_attributes']['url']]);
+        $this->addViewButton();
     }
 
     function parsePush() {
@@ -95,8 +95,8 @@ class GitlabTeamsMessage extends TeamsMessage {
 
         $this->addFacts("", $commits);
 
-        $this->addCommentAction('Reply', 'Enter your comment', 'OK', 'http://...', 'comment', 'body={{comment.value}}');//@todo
-        $this->addPotentialAction(['text' => 'View', 'target' => $this->input['object_attributes']['url']]);
+        $this->addCommentAction();
+        $this->addViewButton();
     }
 
     function parseTagPush() {
@@ -112,7 +112,7 @@ class GitlabTeamsMessage extends TeamsMessage {
             $this->input['user']['name'].": ",
             $this->input['user']['avatar_url']);
 
-        $this->addPotentialAction(['text' => 'View', 'target' => $this->input['object_attributes']['url']]);
+        $this->addViewButton();
     }
 
     function parseBuild() {
@@ -121,7 +121,7 @@ class GitlabTeamsMessage extends TeamsMessage {
             $this->input['user']['name'].": ".$this->input['build_name'],
             $this->input['user']['avatar_url']);
 
-        $this->addPotentialAction(['text' => 'View', 'target' => $this->input['object_attributes']['url']]);
+        $this->addViewButton();
     }
 
     function parseWikiPage() {
@@ -130,6 +130,25 @@ class GitlabTeamsMessage extends TeamsMessage {
             $this->input['user']['name'].": ",
             $this->input['user']['avatar_url']);
 
+        $this->addViewButton();
+    }
+
+    function addViewButton() {
         $this->addPotentialAction(['text' => 'View', 'target' => $this->input['object_attributes']['url']]);
+    }
+
+    function addCommentAction()
+    {
+        $this->addPotentialAction(
+            [
+                'text' => 'Reply',
+                'inputs' => [
+                    $this->makeInput(['id' => 'comment', 'title' => 'Enter your comment'], 'TextInput')
+                ],
+                'actions' => [
+                    $this->makeAction(['text' => 'OK', 'target' => null, 'body' => 'body={{comment.value}}'], 'HttpPost')
+                ]
+            ],
+            'Actioncard');
     }
 }

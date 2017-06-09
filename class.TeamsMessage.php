@@ -99,21 +99,6 @@ class TeamsMessage {
         $this->sections[] = $section;
     }
 
-    public function addCommentAction($text, $placeholder, $button, $target, $id, $body)
-    {
-        $this->addPotentialAction(
-            [
-                'text' => $text,
-                'inputs' => [
-                    $this->makeInput(['id' => $id, 'title' => $placeholder], 'TextInput')
-                ],
-                'actions' => [
-                    $this->makeAction(['text' => $button, 'target' => $target, 'body' => $body], 'HttpPost')
-                ]
-            ],
-            'Actioncard');
-    }
-
     public function addPotentialAction($options, $type = null)
     {
         $this->potentialAction[] = $this->makeAction($options, $type);
